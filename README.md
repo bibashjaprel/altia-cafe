@@ -47,7 +47,7 @@ A comprehensive Point of Sale (POS) system for cafes with table management, cust
 
 1. **Clone the repository**
    ```bash
-   git clone <your-repo-url>
+   git clone https://github.com/bibashjaprel/altia-cafe.git
    cd altia-cafe
    ```
 
