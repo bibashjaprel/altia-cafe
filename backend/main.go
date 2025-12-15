@@ -66,6 +66,14 @@ func main() {
 		// Auth
 		protected.GET("/auth/me", handlers.GetMe)
 
+		// Menu Items
+		protected.GET("/menu", handlers.GetMenuItems)
+		protected.GET("/menu/categories", handlers.GetMenuCategories)
+		protected.GET("/menu/:id", handlers.GetMenuItem)
+		protected.POST("/menu", handlers.CreateMenuItem)
+		protected.PUT("/menu/:id", handlers.UpdateMenuItem)
+		protected.DELETE("/menu/:id", handlers.DeleteMenuItem)
+
 		// Tables
 		protected.GET("/tables", handlers.GetTables)
 		protected.GET("/tables/:id", handlers.GetTable)
@@ -73,6 +81,8 @@ func main() {
 		protected.PUT("/tables/:id", handlers.UpdateTable)
 		protected.DELETE("/tables/:id", handlers.DeleteTable)
 		protected.POST("/tables/:id/assign", handlers.AssignCustomerToTable)
+		protected.GET("/tables/:id/orders", handlers.GetTableOrders)
+		protected.POST("/tables/:id/payout", handlers.PayoutTable)
 
 		// Customers
 		protected.GET("/customers", handlers.GetCustomers)

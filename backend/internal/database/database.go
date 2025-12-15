@@ -43,6 +43,7 @@ func Migrate() error {
 		&models.User{},
 		&models.Customer{},
 		&models.Table{},
+		&models.MenuItem{},
 		&models.Order{},
 		&models.OrderItem{},
 		&models.Payment{},
@@ -100,6 +101,19 @@ func Seed() error {
 		{Name: "Table 5", PositionX: 200, PositionY: 200, Width: 100, Height: 100, Status: models.TableFree},
 	}
 	DB.Create(&tables)
+
+	// Create menu items
+	menuItems := []models.MenuItem{
+		{Name: "Chiyaa (Tea)", Category: "Beverages", Price: 20, Available: true, Description: "Traditional Nepali tea"},
+		{Name: "Coffee", Category: "Beverages", Price: 50, Available: true, Description: "Hot coffee"},
+		{Name: "Cold Drink", Category: "Beverages", Price: 40, Available: true, Description: "Soft drinks"},
+		{Name: "Ice", Category: "Beverages", Price: 10, Available: true, Description: "Ice cubes"},
+		{Name: "Samosa", Category: "Snacks", Price: 15, Available: true, Description: "Crispy vegetable samosa"},
+		{Name: "Momo", Category: "Main Course", Price: 120, Available: true, Description: "Steamed dumplings"},
+		{Name: "Chowmein", Category: "Main Course", Price: 80, Available: true, Description: "Stir-fried noodles"},
+		{Name: "Burger", Category: "Fast Food", Price: 150, Available: true, Description: "Chicken/Veg burger"},
+	}
+	DB.Create(&menuItems)
 
 	log.Println("Seed data created successfully")
 	log.Println("Default credentials - Admin: admin/admin123, Frontdesk: frontdesk/frontdesk123")

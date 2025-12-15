@@ -27,4 +27,6 @@ type Table struct {
 	Status     TableStatus    `gorm:"type:varchar(20);not null;default:'free'" json:"status"`
 	CustomerID *uint          `json:"customer_id,omitempty"`
 	Customer   *Customer      `gorm:"foreignKey:CustomerID" json:"customer,omitempty"`
+	GuestName  string         `json:"guest_name"`
+	GuestPhone string         `json:"guest_phone"`
 }
