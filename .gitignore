@@ -1,0 +1,23 @@
+# Backend
+backend/.env
+backend/bin/
+backend/dist/
+
+# Frontend
+frontend/.env.local
+frontend/.next/
+frontend/out/
+frontend/node_modules/
+
+# Database
+postgres_data/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
