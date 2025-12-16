@@ -20,7 +20,15 @@ api.interceptors.request.use((config) => {
 
 // Handle auth errors
 api.interceptors.response.use(
-  (response) => response,
+  api.interceptors.request.use((config) => {
+    const tenant = process.env.NEXT_PUBLIC_TENANT;
+    if (tenant) {
+      config.headers = config.headers || {};
+      (config.headers as any)['X-Tenant'] = tenant;
+    }
+    return config;
+  });
+(response) => response,
   (error) => {
     if (error.response?.status === 401) {
       localStorage.removeItem('token');
