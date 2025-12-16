@@ -38,9 +38,6 @@ export default function Layout({ children }: LayoutProps) {
               <Link href="/tables" className="flex items-center px-3 py-2 text-gray-700 hover:text-blue-600">
                 Tables
               </Link>
-              <Link href="/orders" className="flex items-center px-3 py-2 text-gray-700 hover:text-blue-600">
-                Orders
-              </Link>
               <Link href="/payments" className="flex items-center px-3 py-2 text-gray-700 hover:text-blue-600">
                 Payments
               </Link>
