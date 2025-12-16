@@ -11,8 +11,7 @@ import (
 
 func GetCustomers(c *gin.Context) {
 	var customers []models.Customer
-	tenant, _ := c.Get("tenant")
-	if err := database.DB.Where("tenant_id = ?", tenant).Find(&customers).Error; err != nil {
+	if err := applyTenantScope(database.DB, c).Find(&customers).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch customers"})
 		return
 	}
@@ -24,8 +23,7 @@ func GetCustomer(c *gin.Context) {
 	id := c.Param("id")
 
 	var customer models.Customer
-	tenant, _ := c.Get("tenant")
-	if err := database.DB.Where("tenant_id = ?", tenant).Preload("Orders").Preload("Payments").First(&customer, id).Error; err != nil {
+	if err := applyTenantScope(database.DB, c).Preload("Orders").Preload("Payments").First(&customer, id).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Customer not found"})
 		return
 	}
@@ -59,8 +57,7 @@ func UpdateCustomer(c *gin.Context) {
 	id := c.Param("id")
 
 	var customer models.Customer
-	tenant, _ := c.Get("tenant")
-	if err := database.DB.Where("tenant_id = ?", tenant).First(&customer, id).Error; err != nil {
+	if err := applyTenantScope(database.DB, c).First(&customer, id).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Customer not found"})
 		return
 	}
@@ -86,8 +83,7 @@ func UpdateCustomer(c *gin.Context) {
 
 func DeleteCustomer(c *gin.Context) {
 	id := c.Param("id")
-	tenant, _ := c.Get("tenant")
-	if err := database.DB.Where("tenant_id = ?", tenant).Delete(&models.Customer{}, id).Error; err != nil {
+	if err := applyTenantScope(database.DB, c).Delete(&models.Customer{}, id).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete customer"})
 		return
 	}

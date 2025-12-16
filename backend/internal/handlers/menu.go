@@ -13,8 +13,8 @@ func GetMenuItems(c *gin.Context) {
 	var menuItems []models.MenuItem
 
 	// Scope by tenant
-	tenant, _ := c.Get("tenant")
-	query := database.DB.Where("tenant_id = ?", tenant).Order("category, name")
+	// Tenant scoping applied via applyTenantScope
+	query := applyTenantScope(database.DB, c).Order("category, name")
 
 	// Filter by category if provided
 	if category := c.Query("category"); category != "" {
@@ -38,8 +38,8 @@ func GetMenuItem(c *gin.Context) {
 	id := c.Param("id")
 
 	var menuItem models.MenuItem
-	tenant, _ := c.Get("tenant")
-	if err := database.DB.Where("tenant_id = ?", tenant).First(&menuItem, id).Error; err != nil {
+	// Tenant scoping applied via applyTenantScope
+	if err := applyTenantScope(database.DB, c).First(&menuItem, id).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Menu item not found"})
 		return
 	}
@@ -68,8 +68,8 @@ func UpdateMenuItem(c *gin.Context) {
 	id := c.Param("id")
 
 	var menuItem models.MenuItem
-	tenant, _ := c.Get("tenant")
-	if err := database.DB.Where("tenant_id = ?", tenant).First(&menuItem, id).Error; err != nil {
+	// Tenant scoping applied via applyTenantScope
+	if err := applyTenantScope(database.DB, c).First(&menuItem, id).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Menu item not found"})
 		return
 	}
@@ -98,8 +98,8 @@ func UpdateMenuItem(c *gin.Context) {
 
 func DeleteMenuItem(c *gin.Context) {
 	id := c.Param("id")
-	tenant, _ := c.Get("tenant")
-	if err := database.DB.Where("tenant_id = ?", tenant).Delete(&models.MenuItem{}, id).Error; err != nil {
+	// Tenant scoping applied via applyTenantScope
+	if err := applyTenantScope(database.DB, c).Delete(&models.MenuItem{}, id).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete menu item"})
 		return
 	}
@@ -109,10 +109,10 @@ func DeleteMenuItem(c *gin.Context) {
 
 func GetMenuCategories(c *gin.Context) {
 	var categories []string
-	tenant, _ := c.Get("tenant")
-	if err := database.DB.Model(&models.MenuItem{}).
+	// Tenant scoping applied via applyTenantScope
+	if err := applyTenantScope(database.DB.Model(&models.MenuItem{}), c).
 		Distinct("category").
-		Where("category != '' AND tenant_id = ?", tenant).
+		Where("category != ''").
 		Pluck("category", &categories).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch categories"})
 		return

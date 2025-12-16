@@ -11,8 +11,8 @@ import (
 
 func GetOrders(c *gin.Context) {
 	var orders []models.Order
-	tenant, _ := c.Get("tenant")
-	query := database.DB.Where("tenant_id = ?", tenant).Preload("Table").Preload("Customer").Preload("Items")
+	// Tenant scoping applied via applyTenantScope
+	query := applyTenantScope(database.DB, c).Preload("Table").Preload("Customer").Preload("Items")
 
 	// Filter by status if provided
 	if status := c.Query("status"); status != "" {
@@ -41,8 +41,8 @@ func GetOrder(c *gin.Context) {
 	id := c.Param("id")
 
 	var order models.Order
-	tenant, _ := c.Get("tenant")
-	if err := database.DB.Where("tenant_id = ?", tenant).Preload("Table").Preload("Customer").Preload("Items").First(&order, id).Error; err != nil {
+	// Tenant scoping applied via applyTenantScope
+	if err := applyTenantScope(database.DB, c).Preload("Table").Preload("Customer").Preload("Items").First(&order, id).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Order not found"})
 		return
 	}
@@ -95,8 +95,8 @@ func UpdateOrder(c *gin.Context) {
 	id := c.Param("id")
 
 	var order models.Order
-	tenant, _ := c.Get("tenant")
-	if err := database.DB.Where("tenant_id = ?", tenant).Preload("Items").First(&order, id).Error; err != nil {
+	// Tenant scoping applied via applyTenantScope
+	if err := applyTenantScope(database.DB, c).Preload("Items").First(&order, id).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Order not found"})
 		return
 	}
@@ -140,8 +140,8 @@ func UpdateOrder(c *gin.Context) {
 
 func DeleteOrder(c *gin.Context) {
 	id := c.Param("id")
-	tenant, _ := c.Get("tenant")
-	if err := database.DB.Where("tenant_id = ?", tenant).Delete(&models.Order{}, id).Error; err != nil {
+	// Tenant scoping applied via applyTenantScope
+	if err := applyTenantScope(database.DB, c).Delete(&models.Order{}, id).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete order"})
 		return
 	}
@@ -159,9 +159,9 @@ func AddOrderItem(c *gin.Context) {
 	}
 
 	// Verify order exists
-	tenant, _ := c.Get("tenant")
+	// Tenant scoping applied via applyTenantScope
 	var order models.Order
-	if err := database.DB.Where("tenant_id = ?", tenant).First(&order, orderID).Error; err != nil {
+	if err := applyTenantScope(database.DB, c).First(&order, orderID).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Order not found"})
 		return
 	}

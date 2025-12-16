@@ -11,8 +11,8 @@ import (
 
 func GetPayments(c *gin.Context) {
 	var payments []models.Payment
-	tenant, _ := c.Get("tenant")
-	query := database.DB.Where("tenant_id = ?", tenant).Preload("Customer").Preload("Order")
+	// Tenant scoping applied via applyTenantScope
+	query := applyTenantScope(database.DB, c).Preload("Customer").Preload("Order")
 
 	// Filter by customer if provided
 	if customerID := c.Query("customer_id"); customerID != "" {
@@ -31,8 +31,8 @@ func GetPayment(c *gin.Context) {
 	id := c.Param("id")
 
 	var payment models.Payment
-	tenant, _ := c.Get("tenant")
-	if err := database.DB.Where("tenant_id = ?", tenant).Preload("Customer").Preload("Order").First(&payment, id).Error; err != nil {
+	// Tenant scoping applied via applyTenantScope
+	if err := applyTenantScope(database.DB, c).Preload("Customer").Preload("Order").First(&payment, id).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Payment not found"})
 		return
 	}
@@ -100,8 +100,8 @@ func DeletePayment(c *gin.Context) {
 	id := c.Param("id")
 
 	var payment models.Payment
-	tenant, _ := c.Get("tenant")
-	if err := database.DB.Where("tenant_id = ?", tenant).First(&payment, id).Error; err != nil {
+	// Tenant scoping applied via applyTenantScope
+	if err := applyTenantScope(database.DB, c).First(&payment, id).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Payment not found"})
 		return
 	}

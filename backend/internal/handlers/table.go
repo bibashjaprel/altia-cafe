@@ -11,8 +11,8 @@ import (
 
 func GetTables(c *gin.Context) {
 	var tables []models.Table
-	tenant, _ := c.Get("tenant")
-	if err := database.DB.Where("tenant_id = ?", tenant).Preload("Customer").Find(&tables).Error; err != nil {
+	// Tenant scoping applied via applyTenantScope
+	if err := applyTenantScope(database.DB, c).Preload("Customer").Find(&tables).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch tables"})
 		return
 	}
@@ -24,8 +24,8 @@ func GetTable(c *gin.Context) {
 	id := c.Param("id")
 
 	var table models.Table
-	tenant, _ := c.Get("tenant")
-	if err := database.DB.Where("tenant_id = ?", tenant).Preload("Customer").First(&table, id).Error; err != nil {
+	// Tenant scoping applied via applyTenantScope
+	if err := applyTenantScope(database.DB, c).Preload("Customer").First(&table, id).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Table not found"})
 		return
 	}
@@ -53,8 +53,8 @@ func UpdateTable(c *gin.Context) {
 	id := c.Param("id")
 
 	var table models.Table
-	tenant, _ := c.Get("tenant")
-	if err := database.DB.Where("tenant_id = ?", tenant).First(&table, id).Error; err != nil {
+	// Tenant scoping applied via applyTenantScope
+	if err := applyTenantScope(database.DB, c).First(&table, id).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Table not found"})
 		return
 	}
@@ -82,15 +82,15 @@ func UpdateTable(c *gin.Context) {
 	}
 
 	// Fetch updated table with customer
-	database.DB.Where("tenant_id = ?", tenant).Preload("Customer").First(&table, id)
+	applyTenantScope(database.DB, c).Preload("Customer").First(&table, id)
 
 	c.JSON(http.StatusOK, table)
 }
 
 func DeleteTable(c *gin.Context) {
 	id := c.Param("id")
-	tenant, _ := c.Get("tenant")
-	if err := database.DB.Where("tenant_id = ?", tenant).Delete(&models.Table{}, id).Error; err != nil {
+	// Tenant scoping applied via applyTenantScope
+	if err := applyTenantScope(database.DB, c).Delete(&models.Table{}, id).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete table"})
 		return
 	}
@@ -113,9 +113,9 @@ func AssignCustomerToTable(c *gin.Context) {
 		return
 	}
 
-	tenant, _ := c.Get("tenant")
+	// Tenant scoping applied via applyTenantScope
 	var table models.Table
-	if err := database.DB.Where("tenant_id = ?", tenant).First(&table, id).Error; err != nil {
+	if err := applyTenantScope(database.DB, c).First(&table, id).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Table not found"})
 		return
 	}
@@ -132,7 +132,7 @@ func AssignCustomerToTable(c *gin.Context) {
 		return
 	}
 
-	database.DB.Where("tenant_id = ?", tenant).Preload("Customer").First(&table, id)
+	applyTenantScope(database.DB, c).Preload("Customer").First(&table, id)
 
 	c.JSON(http.StatusOK, table)
 }
@@ -141,8 +141,8 @@ func GetTableOrders(c *gin.Context) {
 	id := c.Param("id")
 
 	var orders []models.Order
-	tenant, _ := c.Get("tenant")
-	if err := database.DB.Where("tenant_id = ?", tenant).Preload("Items").Preload("Customer").
+	// Tenant scoping applied via applyTenantScope
+	if err := applyTenantScope(database.DB, c).Preload("Items").Preload("Customer").
 		Where("table_id = ? AND status != ?", id, models.OrderBilled).
 		Find(&orders).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch orders"})
@@ -175,16 +175,16 @@ func PayoutTable(c *gin.Context) {
 		return
 	}
 
-	tenant, _ := c.Get("tenant")
+	// Tenant scoping applied via applyTenantScope
 	var table models.Table
-	if err := database.DB.Where("tenant_id = ?", tenant).Preload("Customer").First(&table, id).Error; err != nil {
+	if err := applyTenantScope(database.DB, c).Preload("Customer").First(&table, id).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Table not found"})
 		return
 	}
 
 	// Get all unbilled orders for this table
 	var orders []models.Order
-	database.DB.Where("tenant_id = ? AND table_id = ? AND status != ?", tenant, id, models.OrderBilled).Find(&orders)
+	applyTenantScope(database.DB, c).Where("table_id = ? AND status != ?", id, models.OrderBilled).Find(&orders)
 
 	// Calculate total
 	var totalAmount float64
