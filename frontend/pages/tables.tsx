@@ -157,7 +157,7 @@ export default function Tables() {
       setPayoutAmount(0);
       setPayoutMethod('cash');
       loadTables();
-      
+
       if (payoutMethod === 'credit') {
         alert(`Payout completed! Full amount added to customer credit. They can pay later from Customers or Payments page.`);
       } else {
@@ -691,9 +691,8 @@ export default function Tables() {
                     value={payoutMethod === 'credit' ? 0 : payoutAmount}
                     onChange={(e) => setPayoutAmount(parseFloat(e.target.value) || 0)}
                     disabled={payoutMethod === 'credit'}
-                    className={`w-full border border-gray-300 rounded-lg px-4 py-2 text-lg ${
-                      payoutMethod === 'credit' ? 'bg-gray-100 cursor-not-allowed' : ''
-                    }`}
+                    className={`w-full border border-gray-300 rounded-lg px-4 py-2 text-lg ${payoutMethod === 'credit' ? 'bg-gray-100 cursor-not-allowed' : ''
+                      }`}
                   />
                   {payoutMethod !== 'credit' && payoutAmount < tableOrders.total && (
                     <p className="text-xs text-orange-600 mt-1">
