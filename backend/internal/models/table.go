@@ -19,6 +19,8 @@ type Table struct {
 	CreatedAt  time.Time      `json:"created_at"`
 	UpdatedAt  time.Time      `json:"updated_at"`
 	DeletedAt  gorm.DeletedAt `gorm:"index" json:"-"`
+
+	TenantID   *uint          `gorm:"index" json:"tenant_id,omitempty"`
 	Name       string         `gorm:"not null" json:"name"`
 	PositionX  float64        `json:"position_x"`
 	PositionY  float64        `json:"position_y"`

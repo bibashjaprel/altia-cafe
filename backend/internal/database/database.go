@@ -40,6 +40,7 @@ func Connect() error {
 
 func Migrate() error {
 	err := DB.AutoMigrate(
+		&models.Cafe{},
 		&models.User{},
 		&models.Customer{},
 		&models.Table{},

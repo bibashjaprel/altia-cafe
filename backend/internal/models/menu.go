@@ -11,6 +11,8 @@ type MenuItem struct {
 	CreatedAt   time.Time      `json:"created_at"`
 	UpdatedAt   time.Time      `json:"updated_at"`
 	DeletedAt   gorm.DeletedAt `gorm:"index" json:"-"`
+
+	TenantID    *uint          `gorm:"index" json:"tenant_id,omitempty"`
 	Name        string         `gorm:"not null" json:"name"`
 	Category    string         `json:"category"`
 	Price       float64        `gorm:"not null" json:"price"`

@@ -19,6 +19,8 @@ type Order struct {
 	CreatedAt  time.Time      `json:"created_at"`
 	UpdatedAt  time.Time      `json:"updated_at"`
 	DeletedAt  gorm.DeletedAt `gorm:"index" json:"-"`
+
+	TenantID   *uint          `gorm:"index" json:"tenant_id,omitempty"`
 	TableID    uint           `gorm:"not null" json:"table_id"`
 	Table      Table          `gorm:"foreignKey:TableID" json:"table,omitempty"`
 	CustomerID uint           `gorm:"not null" json:"customer_id"`
