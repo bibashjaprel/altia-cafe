@@ -11,7 +11,8 @@ import (
 
 func GetCustomers(c *gin.Context) {
 	var customers []models.Customer
-	if err := database.DB.Find(&customers).Error; err != nil {
+	tenant, _ := c.Get("tenant")
+	if err := database.DB.Where("tenant_id = ?", tenant).Find(&customers).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch customers"})
 		return
 	}
@@ -23,7 +24,8 @@ func GetCustomer(c *gin.Context) {
 	id := c.Param("id")
 
 	var customer models.Customer
-	if err := database.DB.Preload("Orders").Preload("Payments").First(&customer, id).Error; err != nil {
+	tenant, _ := c.Get("tenant")
+	if err := database.DB.Where("tenant_id = ?", tenant).Preload("Orders").Preload("Payments").First(&customer, id).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Customer not found"})
 		return
 	}
@@ -43,6 +45,8 @@ func CreateCustomer(c *gin.Context) {
 		customer.CreditBalance = 0
 	}
 
+	// Assign tenant
+	customer.TenantID = getTenantID(c)
 	if err := database.DB.Create(&customer).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create customer"})
 		return
@@ -55,7 +59,8 @@ func UpdateCustomer(c *gin.Context) {
 	id := c.Param("id")
 
 	var customer models.Customer
-	if err := database.DB.First(&customer, id).Error; err != nil {
+	tenant, _ := c.Get("tenant")
+	if err := database.DB.Where("tenant_id = ?", tenant).First(&customer, id).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Customer not found"})
 		return
 	}
@@ -81,8 +86,8 @@ func UpdateCustomer(c *gin.Context) {
 
 func DeleteCustomer(c *gin.Context) {
 	id := c.Param("id")
-
-	if err := database.DB.Delete(&models.Customer{}, id).Error; err != nil {
+	tenant, _ := c.Get("tenant")
+	if err := database.DB.Where("tenant_id = ?", tenant).Delete(&models.Customer{}, id).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete customer"})
 		return
 	}
@@ -94,7 +99,8 @@ func GetCustomerBalance(c *gin.Context) {
 	id := c.Param("id")
 
 	var customer models.Customer
-	if err := database.DB.First(&customer, id).Error; err != nil {
+	tenant, _ := c.Get("tenant")
+	if err := database.DB.Where("tenant_id = ?", tenant).First(&customer, id).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Customer not found"})
 		return
 	}

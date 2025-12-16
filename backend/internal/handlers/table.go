@@ -11,7 +11,8 @@ import (
 
 func GetTables(c *gin.Context) {
 	var tables []models.Table
-	if err := database.DB.Preload("Customer").Find(&tables).Error; err != nil {
+	tenant, _ := c.Get("tenant")
+	if err := database.DB.Where("tenant_id = ?", tenant).Preload("Customer").Find(&tables).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch tables"})
 		return
 	}
@@ -23,7 +24,8 @@ func GetTable(c *gin.Context) {
 	id := c.Param("id")
 
 	var table models.Table
-	if err := database.DB.Preload("Customer").First(&table, id).Error; err != nil {
+	tenant, _ := c.Get("tenant")
+	if err := database.DB.Where("tenant_id = ?", tenant).Preload("Customer").First(&table, id).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Table not found"})
 		return
 	}
@@ -37,7 +39,8 @@ func CreateTable(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-
+	// Assign tenant
+	table.TenantID = getTenantID(c)
 	if err := database.DB.Create(&table).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create table"})
 		return
@@ -50,7 +53,8 @@ func UpdateTable(c *gin.Context) {
 	id := c.Param("id")
 
 	var table models.Table
-	if err := database.DB.First(&table, id).Error; err != nil {
+	tenant, _ := c.Get("tenant")
+	if err := database.DB.Where("tenant_id = ?", tenant).First(&table, id).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Table not found"})
 		return
 	}
@@ -78,15 +82,15 @@ func UpdateTable(c *gin.Context) {
 	}
 
 	// Fetch updated table with customer
-	database.DB.Preload("Customer").First(&table, id)
+	database.DB.Where("tenant_id = ?", tenant).Preload("Customer").First(&table, id)
 
 	c.JSON(http.StatusOK, table)
 }
 
 func DeleteTable(c *gin.Context) {
 	id := c.Param("id")
-
-	if err := database.DB.Delete(&models.Table{}, id).Error; err != nil {
+	tenant, _ := c.Get("tenant")
+	if err := database.DB.Where("tenant_id = ?", tenant).Delete(&models.Table{}, id).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete table"})
 		return
 	}
@@ -109,8 +113,9 @@ func AssignCustomerToTable(c *gin.Context) {
 		return
 	}
 
+	tenant, _ := c.Get("tenant")
 	var table models.Table
-	if err := database.DB.First(&table, id).Error; err != nil {
+	if err := database.DB.Where("tenant_id = ?", tenant).First(&table, id).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Table not found"})
 		return
 	}
@@ -127,7 +132,7 @@ func AssignCustomerToTable(c *gin.Context) {
 		return
 	}
 
-	database.DB.Preload("Customer").First(&table, id)
+	database.DB.Where("tenant_id = ?", tenant).Preload("Customer").First(&table, id)
 
 	c.JSON(http.StatusOK, table)
 }
@@ -136,7 +141,8 @@ func GetTableOrders(c *gin.Context) {
 	id := c.Param("id")
 
 	var orders []models.Order
-	if err := database.DB.Preload("Items").Preload("Customer").
+	tenant, _ := c.Get("tenant")
+	if err := database.DB.Where("tenant_id = ?", tenant).Preload("Items").Preload("Customer").
 		Where("table_id = ? AND status != ?", id, models.OrderBilled).
 		Find(&orders).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch orders"})
@@ -169,15 +175,16 @@ func PayoutTable(c *gin.Context) {
 		return
 	}
 
+	tenant, _ := c.Get("tenant")
 	var table models.Table
-	if err := database.DB.Preload("Customer").First(&table, id).Error; err != nil {
+	if err := database.DB.Where("tenant_id = ?", tenant).Preload("Customer").First(&table, id).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Table not found"})
 		return
 	}
 
 	// Get all unbilled orders for this table
 	var orders []models.Order
-	database.DB.Where("table_id = ? AND status != ?", id, models.OrderBilled).Find(&orders)
+	database.DB.Where("tenant_id = ? AND table_id = ? AND status != ?", tenant, id, models.OrderBilled).Find(&orders)
 
 	// Calculate total
 	var totalAmount float64
@@ -204,6 +211,7 @@ func PayoutTable(c *gin.Context) {
 		if customer.Name == "" {
 			customer.Name = "Guest - " + table.Name
 		}
+		customer.TenantID = getTenantID(c)
 		database.DB.Create(&customer)
 		customerID = customer.ID
 	}
@@ -225,6 +233,7 @@ func PayoutTable(c *gin.Context) {
 		if req.Method == "" {
 			payment.Method = "cash"
 		}
+		payment.TenantID = getTenantID(c)
 		database.DB.Create(&payment)
 	}
 

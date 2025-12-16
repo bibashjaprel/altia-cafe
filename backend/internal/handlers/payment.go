@@ -11,8 +11,8 @@ import (
 
 func GetPayments(c *gin.Context) {
 	var payments []models.Payment
-
-	query := database.DB.Preload("Customer").Preload("Order")
+	tenant, _ := c.Get("tenant")
+	query := database.DB.Where("tenant_id = ?", tenant).Preload("Customer").Preload("Order")
 
 	// Filter by customer if provided
 	if customerID := c.Query("customer_id"); customerID != "" {
@@ -31,7 +31,8 @@ func GetPayment(c *gin.Context) {
 	id := c.Param("id")
 
 	var payment models.Payment
-	if err := database.DB.Preload("Customer").Preload("Order").First(&payment, id).Error; err != nil {
+	tenant, _ := c.Get("tenant")
+	if err := database.DB.Where("tenant_id = ?", tenant).Preload("Customer").Preload("Order").First(&payment, id).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Payment not found"})
 		return
 	}
@@ -54,6 +55,8 @@ func CreatePayment(c *gin.Context) {
 	}
 
 	// Create payment record
+	// Assign tenant
+	payment.TenantID = getTenantID(c)
 	if err := database.DB.Create(&payment).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create payment"})
 		return
@@ -77,7 +80,7 @@ func CreatePayment(c *gin.Context) {
 			// Check if order is fully paid
 			var totalPaid float64
 			database.DB.Model(&models.Payment{}).
-				Where("order_id = ?", *payment.OrderID).
+				Where("tenant_id = ? AND order_id = ?", getTenantString(c), *payment.OrderID).
 				Select("COALESCE(SUM(amount), 0)").
 				Scan(&totalPaid)
 
@@ -97,7 +100,8 @@ func DeletePayment(c *gin.Context) {
 	id := c.Param("id")
 
 	var payment models.Payment
-	if err := database.DB.First(&payment, id).Error; err != nil {
+	tenant, _ := c.Get("tenant")
+	if err := database.DB.Where("tenant_id = ?", tenant).First(&payment, id).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Payment not found"})
 		return
 	}

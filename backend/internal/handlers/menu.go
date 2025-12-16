@@ -12,7 +12,9 @@ import (
 func GetMenuItems(c *gin.Context) {
 	var menuItems []models.MenuItem
 
-	query := database.DB.Order("category, name")
+	// Scope by tenant
+	tenant, _ := c.Get("tenant")
+	query := database.DB.Where("tenant_id = ?", tenant).Order("category, name")
 
 	// Filter by category if provided
 	if category := c.Query("category"); category != "" {
@@ -36,7 +38,8 @@ func GetMenuItem(c *gin.Context) {
 	id := c.Param("id")
 
 	var menuItem models.MenuItem
-	if err := database.DB.First(&menuItem, id).Error; err != nil {
+	tenant, _ := c.Get("tenant")
+	if err := database.DB.Where("tenant_id = ?", tenant).First(&menuItem, id).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Menu item not found"})
 		return
 	}
@@ -50,6 +53,8 @@ func CreateMenuItem(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+	// Assign tenant
+	menuItem.TenantID = getTenantID(c)
 
 	if err := database.DB.Create(&menuItem).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create menu item"})
@@ -63,7 +68,8 @@ func UpdateMenuItem(c *gin.Context) {
 	id := c.Param("id")
 
 	var menuItem models.MenuItem
-	if err := database.DB.First(&menuItem, id).Error; err != nil {
+	tenant, _ := c.Get("tenant")
+	if err := database.DB.Where("tenant_id = ?", tenant).First(&menuItem, id).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Menu item not found"})
 		return
 	}
@@ -92,8 +98,8 @@ func UpdateMenuItem(c *gin.Context) {
 
 func DeleteMenuItem(c *gin.Context) {
 	id := c.Param("id")
-
-	if err := database.DB.Delete(&models.MenuItem{}, id).Error; err != nil {
+	tenant, _ := c.Get("tenant")
+	if err := database.DB.Where("tenant_id = ?", tenant).Delete(&models.MenuItem{}, id).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete menu item"})
 		return
 	}
@@ -103,10 +109,10 @@ func DeleteMenuItem(c *gin.Context) {
 
 func GetMenuCategories(c *gin.Context) {
 	var categories []string
-	
+	tenant, _ := c.Get("tenant")
 	if err := database.DB.Model(&models.MenuItem{}).
 		Distinct("category").
-		Where("category != ''").
+		Where("category != '' AND tenant_id = ?", tenant).
 		Pluck("category", &categories).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch categories"})
 		return

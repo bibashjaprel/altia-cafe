@@ -64,6 +64,13 @@ func main() {
 	protected := r.Group("/api")
 	protected.Use(middleware.AuthMiddleware())
 	{
+		// Cafes (platform admin)
+		protected.GET("/cafes", handlers.GetCafes)
+		protected.GET("/cafes/:id", handlers.GetCafe)
+		protected.POST("/cafes", handlers.CreateCafe)
+		protected.PUT("/cafes/:id", handlers.UpdateCafe)
+		protected.DELETE("/cafes/:id", handlers.DeleteCafe)
+
 		// Auth
 		protected.GET("/auth/me", handlers.GetMe)
 

@@ -34,6 +34,7 @@ type Order struct {
 type OrderItem struct {
 	ID        uint      `gorm:"primarykey" json:"id"`
 	CreatedAt time.Time `json:"created_at"`
+	TenantID  *uint     `gorm:"index" json:"tenant_id,omitempty"`
 	OrderID   uint      `gorm:"not null" json:"order_id"`
 	ItemName  string    `gorm:"not null" json:"item_name"`
 	Quantity  int       `gorm:"not null;default:1" json:"quantity"`
