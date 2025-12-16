@@ -9,28 +9,26 @@ const api = axios.create({
   },
 });
 
-// Add token to requests
+// Request interceptor: add token and tenant header
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
+  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
   if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+    config.headers = config.headers || {};
+    (config.headers as any).Authorization = `Bearer ${token}`;
+  }
+  const tenant = process.env.NEXT_PUBLIC_TENANT;
+  if (tenant) {
+    config.headers = config.headers || {};
+    (config.headers as any)['X-Tenant'] = tenant;
   }
   return config;
 });
 
-// Handle auth errors
+// Response interceptor: handle auth errors
 api.interceptors.response.use(
-  api.interceptors.request.use((config) => {
-    const tenant = process.env.NEXT_PUBLIC_TENANT;
-    if (tenant) {
-      config.headers = config.headers || {};
-      (config.headers as any)['X-Tenant'] = tenant;
-    }
-    return config;
-  });
-(response) => response,
+  (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    if (error.response?.status === 401 && typeof window !== 'undefined') {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       window.location.href = '/login';
@@ -92,6 +90,14 @@ export const menu = {
   create: (data: any) => api.post('/menu', data),
   update: (id: number, data: any) => api.put(`/menu/${id}`, data),
   delete: (id: number) => api.delete(`/menu/${id}`),
+};
+
+export const cafes = {
+  getAll: () => api.get('/cafes'),
+  getOne: (id: number) => api.get(`/cafes/${id}`),
+  create: (data: any) => api.post('/cafes', data),
+  update: (id: number, data: any) => api.put(`/cafes/${id}`, data),
+  delete: (id: number) => api.delete(`/cafes/${id}`),
 };
 
 export default api;

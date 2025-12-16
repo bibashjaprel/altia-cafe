@@ -3,6 +3,14 @@ import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { useEffect } from 'react';
+import {
+  LayoutDashboard,
+  Utensils,
+  Users,
+  ShoppingCart,
+  CreditCard,
+  LogOut,
+} from 'lucide-react';
 
 interface LayoutProps {
   children: ReactNode;
@@ -11,6 +19,19 @@ interface LayoutProps {
 export default function Layout({ children }: LayoutProps) {
   const { user, logout, isLoading } = useAuth();
   const router = useRouter();
+
+  const isActive = (path: string) => {
+    return router.pathname === path;
+  };
+
+  const navLinks = [
+    { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { href: '/tables', label: 'Tables', icon: Utensils },
+    { href: '/orders', label: 'Orders', icon: ShoppingCart },
+    { href: '/customers', label: 'Customers', icon: Users },
+    { href: '/payments', label: 'Payments', icon: CreditCard },
+    { href: '/menu', label: 'Menu', icon: Utensils },
+  ];
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -28,35 +49,39 @@ export default function Layout({ children }: LayoutProps) {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white shadow-md">
+      <nav className="bg-white shadow-md border-b-2 border-blue-600">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
-            <div className="flex space-x-8">
-              <Link href="/dashboard" className="flex items-center px-3 py-2 text-gray-700 hover:text-blue-600">
-                Dashboard
-              </Link>
-              <Link href="/tables" className="flex items-center px-3 py-2 text-gray-700 hover:text-blue-600">
-                Tables
-              </Link>
-              <Link href="/payments" className="flex items-center px-3 py-2 text-gray-700 hover:text-blue-600">
-                Payments
-              </Link>
-              <Link href="/customers" className="flex items-center px-3 py-2 text-gray-700 hover:text-blue-600">
-                Customers
-              </Link>
-              <Link href="/menu" className="flex items-center px-3 py-2 text-gray-700 hover:text-blue-600">
-                Menu
-              </Link>
+            <div className="flex space-x-1">
+              {navLinks.map((link) => {
+                const Icon = link.icon;
+                const active = isActive(link.href);
+                return (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-t-lg transition-all font-medium ${active
+                        ? 'bg-blue-600 text-white shadow-lg border-b-4 border-blue-800'
+                        : 'text-gray-700 hover:bg-blue-50 hover:text-blue-600'
+                      }`}
+                  >
+                    <Icon size={18} />
+                    {link.label}
+                  </Link>
+                );
+              })}
             </div>
 
             <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-700">
+              <span className="text-sm text-gray-700 font-medium flex items-center gap-2">
+                <Users size={16} />
                 {user.full_name} ({user.role})
               </span>
               <button
                 onClick={logout}
-                className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600"
+                className="bg-gradient-to-r from-red-500 to-red-600 text-white px-4 py-2 rounded-lg hover:from-red-600 hover:to-red-700 flex items-center gap-2 font-semibold shadow-lg transition-all"
               >
+                <LogOut size={18} />
                 Logout
               </button>
             </div>
